@@ -32,5 +32,8 @@ changelog:
   skip: true
 
 dockers:
-  - image_templates:
-      - sboschman/helmper
+  - image_templates: ["ghcr.io/sboschman/{{ .ProjectName }}:{{ .Version }}-amd64"]
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - --platform=linux/amd64

@@ -1,7 +1,6 @@
 name: release
 
 on:
-  workflow_dispatch:
   release:
     types: [published]
 
@@ -41,3 +40,4 @@ jobs:
           args: release --clean --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: ${{ github.repository_owner }}

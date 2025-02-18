@@ -35,12 +35,16 @@ dockers:
   - image_templates: ["ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-amd64"]
     dockerfile: Dockerfile.goreleaser
     use: buildx
+    extra_files:
+      - example/helmper.yaml
     build_flag_templates:
       - --platform=linux/amd64
   - image_templates: ["ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-arm64v8"]
     goarch: arm64
     dockerfile: Dockerfile.goreleaser
     use: buildx
+    extra_files:
+      - example/helmper.yaml
     build_flag_templates:
       - --platform=linux/arm64/v8
 

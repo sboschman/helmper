@@ -1,3 +1,4 @@
 FROM scratch
 ENTRYPOINT ["/helmper"]
+COPY example/helmper.yaml /etc/helmper/helmper.yaml
 COPY helmper /

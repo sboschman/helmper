@@ -30,3 +30,7 @@ release:
 
 changelog:
   skip: true
+
+dockers:
+  - image_templates:
+      - sboschman/helmper

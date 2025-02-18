@@ -10,7 +10,7 @@ builds:
       # - windows
     goarch:
       - amd64
-      #- arm64
+      - arm64
     ldflags:
       - "-s -w -X github.com/ChristofferNissen/helmper/internal.version={{ .Version }} -X github.com/ChristofferNissen/helmper/internal.commit={{ .Commit }} -X github.com/ChristofferNissen/helmper/internal.date={{ .CommitDate }}"
 
@@ -32,8 +32,24 @@ changelog:
   skip: true
 
 dockers:
-  - image_templates: ["ghcr.io/sboschman/{{ .ProjectName }}:{{ .Version }}-amd64"]
+  - image_templates: ["ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-amd64"]
     dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - --platform=linux/amd64
+  - image_templates: ["ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-arm64v8"]
+    goarch: arm64
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - --platform=linux/arm64/v8
+
+docker_manifests:
+  - name_template: ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}
+    image_templates:
+      - ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-amd64
+      - ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-arm64v8
+  - name_template: ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:latest
+    image_templates:
+      - ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-amd64
+      - ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-arm64v8

@@ -1,0 +1,7 @@
+FROM golang:alpine as builder
+
+FROM scratch
+ENTRYPOINT ["/helmper"]
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY example/helmper.yaml /etc/helmper/helmper.yaml
+COPY helmper /

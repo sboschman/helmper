@@ -30,3 +30,38 @@ release:
 
 changelog:
   skip: true
+
+dockers:
+  - image_templates: ["ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-amd64"]
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    extra_files:
+      - example/helmper.yaml
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/amd64"
+  - image_templates: ["ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-arm64v8"]
+    goarch: arm64
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    extra_files:
+      - example/helmper.yaml
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/arm64/v8"
+
+docker_manifests:
+  - name_template: ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}
+    image_templates:
+      - ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-amd64
+      - ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-arm64v8
+  - name_template: ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:latest
+    image_templates:
+      - ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-amd64
+      - ghcr.io/{{ .Env.GITHUB_OWNER }}/{{ .ProjectName }}:{{ .Version }}-arm64v8

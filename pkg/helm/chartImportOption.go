@@ -10,6 +10,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"golang.org/x/sync/errgroup"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
 
 	"github.com/ChristofferNissen/helmper/pkg/image"
@@ -246,17 +247,23 @@ func (opt ChartImportOption) Run(ctx context.Context, setters ...Option) error {
 							return nil
 						}
 
+						registryPathPrefix := chartutil.ChartsDir
+						if r.PrefixSource {
+							registryPathPrefix = c.Repo.Name
+							slog.Info("registry has PrefixSource enabled", slog.String("old path", chartutil.ChartsDir+"/"+c.Name), slog.String("new path", registryPathPrefix+"/"+c.Name))
+						}
+
 						if !opt.All {
-							_, err := r.Exist(egCtx, "charts/"+c.Name, c.Version)
+							_, err := r.Exist(egCtx, registryPathPrefix+"/"+c.Name, c.Version)
 							if err == nil {
-								slog.Info("Chart already present in registry. Skipping import", slog.String("chart", "charts/"+c.Name), slog.String("registry", r.URL), slog.String("version", c.Version))
+								slog.Info("Chart already present in registry. Skipping import", slog.String("chart", registryPathPrefix+"/"+c.Name), slog.String("registry", r.URL), slog.String("version", c.Version))
 								return nil
 							}
 							slog.Debug(err.Error())
 						}
 
 						if opt.ModifyRegistry {
-							res, err := c.PushAndModify(opt.Settings, r.URL, r.Insecure, r.PlainHTTP, r.PrefixSource)
+							res, err := c.PushAndModify(opt.Settings, r.URL, registryPathPrefix, r.Insecure, r.PlainHTTP, r.PrefixSource)
 							if err != nil {
 								return fmt.Errorf("helm: error pushing and modifying chart %s to registry %s :: %w", c.Name, r.URL, err)
 							}
@@ -271,7 +278,7 @@ func (opt ChartImportOption) Run(ctx context.Context, setters ...Option) error {
 							return fmt.Errorf("helm: error creating registry client :: %w", err)
 						}
 						c.RegistryClient = client
-						res, err := c.Push(opt.Settings, r.URL, r.Insecure, r.PlainHTTP)
+						res, err := c.Push(opt.Settings, r.URL, registryPathPrefix)
 						if err != nil {
 							return fmt.Errorf("helm: error pushing chart %s to registry %s :: %w", c.Name, r.URL, err)
 						}

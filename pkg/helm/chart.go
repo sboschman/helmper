@@ -115,14 +115,14 @@ func (c Chart) push(chartFilePath string, destination string) error {
 	return nil
 }
 
-func (c Chart) Push(settings *cli.EnvSettings, registry string, insecure bool, plainHTTP bool) (string, error) {
+func (c Chart) Push(settings *cli.EnvSettings, registry, registryPathPrefix string) (string, error) {
 	chartFilePath, err := c.Locate(settings)
 	if err != nil {
 		return "", fmt.Errorf("failed to pull tar: %w", err)
 	}
 	defer os.Remove(chartFilePath)
 
-	err = c.push(chartFilePath, fmt.Sprintf("%s/%s/%s:%s", registry, chartutil.ChartsDir, c.Name, c.Version))
+	err = c.push(chartFilePath, fmt.Sprintf("%s/%s/%s:%s", registry, registryPathPrefix, c.Name, c.Version))
 	return chartFilePath, err
 }
 
@@ -159,6 +159,8 @@ func (c *Chart) modifyRegistryReferences(settings *cli.EnvSettings, newRegistry 
 			d.Repository = ""
 		case d.Repository != "":
 			// Change dependency ref to registry being imported to
+			// HERE change /charts/ !!!
+			println("deps? heb ik niet toch?")
 			d.Repository = newRegistry + "/charts/" + d.Name
 
 			if strings.Contains(d.Version, "*") || strings.Contains(d.Version, "x") {
@@ -265,7 +267,7 @@ func removeLockFile(chartPath string) error {
 	return nil
 }
 
-func (c Chart) PushAndModify(settings *cli.EnvSettings, registry string, insecure bool, plainHTTP bool, prefixSource bool) (string, error) {
+func (c Chart) PushAndModify(settings *cli.EnvSettings, registry, registryPathPrefix string, insecure bool, plainHTTP bool, prefixSource bool) (string, error) {
 	// Modify chart
 	modifiedPath, err := c.modifyRegistryReferences(settings, registry, prefixSource)
 	if err != nil {
@@ -275,7 +277,7 @@ func (c Chart) PushAndModify(settings *cli.EnvSettings, registry string, insecur
 	// Use the `Push` method to push the modified chart
 	c.PlainHTTP = plainHTTP
 	c.Repo.InsecureSkipTLSverify = insecure
-	err = c.push(modifiedPath, fmt.Sprintf("%s/%s/%s:%s", registry, chartutil.ChartsDir, c.Name, c.Version))
+	err = c.push(modifiedPath, fmt.Sprintf("%s/%s/%s:%s", registry, registryPathPrefix, c.Name, c.Version))
 	if err != nil {
 		return "", err
 	}

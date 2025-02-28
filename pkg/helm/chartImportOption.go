@@ -60,10 +60,7 @@ func (io *IdentifyImportOption) Run(_ context.Context) (RegistryChartStatus, Reg
 		}
 
 		// Charts
-		n := fmt.Sprintf("charts/%s", c.Name)
-		v := c.Version
-
-		row := table.Row{sc.Value("index_import_charts"), fmt.Sprintf("charts/%s", c.Name), c.Version}
+		row := table.Row{sc.Value("index_import_charts"), fmt.Sprintf("%s/%s", chartutil.ChartsDir, c.Name), c.Version}
 
 		for _, r := range io.Registries {
 			elem := m1[r]
@@ -73,13 +70,22 @@ func (io *IdentifyImportOption) Run(_ context.Context) (RegistryChartStatus, Reg
 				m1[r] = elem
 			}
 
-			existsInRegistry := registry.Exists(context.TODO(), n, v, []*registry.Registry{r})[r.URL]
+			registryPathPrefix := chartutil.ChartsDir
+			if r.PrefixSource {
+				registryPathPrefix = c.Repo.Name
+				slog.Debug("registry has PrefixSource enabled", slog.String("registry", r.URL), slog.String("old path", chartutil.ChartsDir+"/"+c.Name), slog.String("new path", registryPathPrefix+"/"+c.Name))
+			}
+
+			existsInRegistry := registry.Exists(context.TODO(), fmt.Sprintf("%s/%s", registryPathPrefix, c.Name), c.Version, []*registry.Registry{r})[r.URL]
+			row = append(row, terminal.StatusEmoji(existsInRegistry))
 			b := io.All || !existsInRegistry
 			elem[c] = b
 			if b {
 				sc.Inc(r.URL + "charts")
 			}
-			row = append(row, terminal.StatusEmoji(existsInRegistry), terminal.StatusEmoji(b))
+			if io.ImportEnabled {
+				row = append(row, terminal.StatusEmoji(b))
+			}
 		}
 		io.ChartsOverview.AddRow(row)
 
@@ -212,7 +218,7 @@ func (opt ChartImportOption) Run(ctx context.Context, setters ...Option) error {
 
 	eg, egCtx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		eg, egCtx := errgroup.WithContext(egCtx)
+		eg, _ := errgroup.WithContext(egCtx)
 
 		for r, m := range opt.Data {
 			charts := []*Chart{}
@@ -250,11 +256,11 @@ func (opt ChartImportOption) Run(ctx context.Context, setters ...Option) error {
 						registryPathPrefix := chartutil.ChartsDir
 						if r.PrefixSource {
 							registryPathPrefix = c.Repo.Name
-							slog.Info("registry has PrefixSource enabled", slog.String("old path", chartutil.ChartsDir+"/"+c.Name), slog.String("new path", registryPathPrefix+"/"+c.Name))
+							slog.Debug("registry has PrefixSource enabled", slog.String("registry", r.URL), slog.String("old path", chartutil.ChartsDir+"/"+c.Name), slog.String("new path", registryPathPrefix+"/"+c.Name))
 						}
 
 						if !opt.All {
-							_, err := r.Exist(egCtx, registryPathPrefix+"/"+c.Name, c.Version)
+							_, err := r.Exist(context.TODO(), registryPathPrefix+"/"+c.Name, c.Version)
 							if err == nil {
 								slog.Info("Chart already present in registry. Skipping import", slog.String("chart", registryPathPrefix+"/"+c.Name), slog.String("registry", r.URL), slog.String("version", c.Version))
 								return nil

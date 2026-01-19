@@ -72,7 +72,7 @@ func (io *IdentifyImportOption) Run(_ context.Context) (RegistryChartStatus, Reg
 
 			registryPathPrefix := chartutil.ChartsDir
 			if r.PrefixSource {
-				registryPathPrefix = c.Repo.Name
+				registryPathPrefix = UpdateNameWithPrefixSource(c)
 				slog.Debug("registry has PrefixSource enabled", slog.String("registry", r.URL), slog.String("old path", chartutil.ChartsDir+"/"+c.Name), slog.String("new path", registryPathPrefix+"/"+c.Name))
 			}
 
@@ -255,7 +255,7 @@ func (opt ChartImportOption) Run(ctx context.Context, setters ...Option) error {
 
 						registryPathPrefix := chartutil.ChartsDir
 						if r.PrefixSource {
-							registryPathPrefix = c.Repo.Name
+							registryPathPrefix = UpdateNameWithPrefixSource(c)
 							slog.Debug("registry has PrefixSource enabled", slog.String("registry", r.URL), slog.String("old path", chartutil.ChartsDir+"/"+c.Name), slog.String("new path", registryPathPrefix+"/"+c.Name))
 						}
 

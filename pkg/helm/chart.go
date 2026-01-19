@@ -516,3 +516,13 @@ func (c *Chart) Read(settings *cli.EnvSettings, update bool) (string, *chart.Cha
 
 	return chartRef.ChartFullPath(), chartRef, values, nil
 }
+
+func UpdateNameWithPrefixSource(c *Chart) string {
+	if strings.HasPrefix(c.Repo.URL, "oci://") {
+		src, _ := strings.CutPrefix(c.Repo.URL, "oci://")
+		srcParts := strings.Split(src, "/")
+		return strings.Join(srcParts[1:len(srcParts)-1], "/")
+	}
+
+	return c.Repo.Name
+}
